@@ -1,51 +1,105 @@
-# dkeeper
+<div align="center">
 
-Welcome to your new dkeeper project and to the internet computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+# 📝 Decentralized Note Keeper
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+**A note-taking app with no central database — notes are stored on-chain in a Motoko canister on the Internet Computer, owned and controlled entirely by the user.**
 
-To learn more before you start working with dkeeper, see the following documentation available online:
+[![Internet Computer](https://img.shields.io/badge/Internet%20Computer-Motoko-29ABE2?logo=internetcomputer&logoColor=white)](https://internetcomputer.org)
+[![React](https://img.shields.io/badge/React-16.8-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Material UI](https://img.shields.io/badge/Material--UI-4.x-007FFF?logo=mui&logoColor=white)](https://v4.mui.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-- [Quick Start](https://sdk.dfinity.org/docs/quickstart/quickstart-intro.html)
-- [SDK Developer Tools](https://sdk.dfinity.org/docs/developers-guide/sdk-guide.html)
-- [Motoko Programming Language Guide](https://sdk.dfinity.org/docs/language-guide/motoko.html)
-- [Motoko Language Quick Reference](https://sdk.dfinity.org/docs/language-guide/language-manual.html)
-- [JavaScript API Reference](https://erxue-5aaaa-aaaab-qaagq-cai.raw.ic0.app)
+</div>
 
-If you want to start working on your project right away, you might want to try the following commands:
+## Overview
+
+This is a full-stack note-taking application built on the **Internet Computer (ICP)**. Instead of a traditional server and database, note data lives entirely in a canister — a smart contract that runs on-chain — written in **Motoko**. The React frontend talks directly to that canister via the DFINITY agent library, with no intermediary backend server involved.
+
+Because storage is on-chain, notes persist independently of any single server: there's no company database that can go down, be sold, or be shut off — the canister keeps running on the Internet Computer network itself.
+
+## ✨ Features
+
+- **On-chain storage** — notes are persisted inside a Motoko canister rather than a conventional database
+- **No backend server** — the React frontend calls canister methods directly via `@dfinity/agent`
+- **Create, view, and manage notes** — standard note CRUD operations exposed as canister methods
+- **Material UI interface** — a clean, component-driven UI built with Material-UI v4
+- **Local development replica** — runs against a local Internet Computer replica via `dfx` for fast iteration before mainnet deployment
+
+## 🧱 Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Backend / storage | [Motoko](https://internetcomputer.org/docs/current/motoko/main/motoko) canister (`dkeeper`) |
+| Frontend | React 16, [Material-UI v4](https://v4.mui.com/) |
+| Canister ↔ frontend bridge | [`@dfinity/agent`](https://www.npmjs.com/package/@dfinity/agent), `@dfinity/candid`, `@dfinity/principal` |
+| Build tooling | Webpack 5, TypeScript |
+| Platform SDK | [DFX](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) (Internet Computer SDK) |
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/en/download/)
+- [DFX](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) — the Internet Computer SDK (`sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"`)
+
+### Installation
 
 ```bash
-cd dkeeper/
-dfx help
-dfx config --help
+git clone https://github.com/Tensae-abita/decentralized-note-keeper.git
+cd decentralized-note-keeper
+npm install
 ```
 
-## Running the project locally
+### Run locally
 
-If you want to test your project locally, you can use the following commands:
+Start a local Internet Computer replica in the background:
 
 ```bash
-# Starts the replica, running in the background
 dfx start --background
+```
 
-# Deploys your canisters to the replica and generates your candid interface
+Deploy the canisters (this compiles the Motoko backend and generates the frontend's Candid bindings):
+
+```bash
 dfx deploy
 ```
 
-Once the job completes, your application will be available at `http://localhost:8000?canisterId={asset_canister_id}`.
+The deployed frontend will be available at:
 
-Additionally, if you are making frontend changes, you can start a development server with
+```
+http://localhost:8000?canisterId={asset_canister_id}
+```
+
+(the exact canister ID is printed by `dfx deploy`).
+
+For active frontend development with hot reload, run the dev server separately — it proxies API calls to the local replica:
 
 ```bash
 npm start
 ```
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 8000.
+This serves the frontend at `http://localhost:8080`.
 
-### Note on frontend environment variables
+## 📁 Project Structure
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+```
+src/
+├── dkeeper/                  # Motoko backend canister
+│   └── main.mo                # Note storage logic and canister methods
+└── dkeeper_assets/            # React frontend
+    ├── src/                    # Components, entrypoint (index.html)
+    └── assets/                 # Static frontend assets
 
-- set`NODE_ENV` to `production` if you are using Webpack
-- use your own preferred method to replace `process.env.NODE_ENV` in the autogenerated declarations
-- Write your own `createActor` constructor
+dfx.json                       # Canister configuration (backend + frontend)
+webpack.config.js               # Frontend build configuration
+```
+
+## ⚙️ Configuration Notes
+
+- `dfx.json` defines two canisters: `dkeeper` (the Motoko backend) and `dkeeper_assets` (the compiled frontend, which depends on `dkeeper`)
+- Canister interface bindings are auto-generated into `src/declarations` from the compiled canister — run `npm run copy:types` (or `dfx deploy`, which triggers it automatically) after backend changes
+- If hosting the frontend outside of `dfx` (e.g., on your own static host), set `NODE_ENV=production` at build time so the app doesn't attempt to fetch the local replica's root key
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
